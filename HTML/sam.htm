@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responsive MediumEditor</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- MediumEditor CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/medium-editor/dist/css/medium-editor.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/medium-editor/dist/css/themes/default.min.css">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .editor-container {
+            margin: 20px auto;
+            padding: 20px;
+            background: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .editable {
+            min-height: 200px;
+            outline: none;
+            padding: 10px;
+            font-size: 16px;
+            line-height: 1.6;
+            background: #fdfdfd;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+        }
+
+        .editable:focus {
+            border: 1px solid #0078d7;
+            background-color: #ffffff;
+        }
+
+        .btn-primary {
+            margin-top: 15px;
+        }
+
+        .display-container {
+            background-color: #f1f1f1;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="text-center my-4">Responsive Text Editor with MediumEditor</h1>
+
+        <!-- Editor Container -->
+        <div class="editor-container">
+            <div class="editable" data-placeholder="Start typing your content here...">
+                Welcome to MediumEditor! This is a responsive text editor.
+            </div>
+            <button class="btn btn-primary w-100" onclick="saveContent()">Save Content</button>
+        </div>
+
+        <!-- Display Container -->
+        <div class="display-container p-3 border rounded">
+            <h3>Saved Content</h3>
+            <div class="display-content" id="displayContent">
+                <!-- The saved content will be displayed here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MediumEditor Script -->
+    <script src="https://cdn.jsdelivr.net/npm/medium-editor"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Initialize MediumEditor
+        const editor = new MediumEditor('.editable', {
+            toolbar: {
+                buttons: [
+                    'bold',
+                    'italic',
+                    'underline',
+                    'anchor',         // For adding links
+                    'image',          // For inserting images
+                    'h2',
+                    'h3',
+                    'quote',
+                    'orderedlist',
+                    'unorderedlist',
+                    'justifyLeft',
+                    'justifyCenter',
+                    'justifyRight',
+                    'justifyFull',
+                    'horizontalRule'  // For line separator
+                ]
+            },
+            placeholder: {
+                text: 'Start typing your content here...'
+            }
+        });
+
+        // Save Content Function
+        function saveContent() {
+            // Get the content from the editor
+            const editorContent = document.querySelector('.editable').innerHTML;
+
+            // Display the content in the display container
+            document.getElementById('displayContent').innerHTML = editorContent;
+
+            // Debugging (optional)
+            console.log("Saved Content: ", editorContent.toString());
+        }
+    </script>
+</body>
+
+</html>
