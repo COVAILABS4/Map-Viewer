@@ -26,9 +26,9 @@ export default function LoginPage() {
 
   useEffect(() => {
     // Retrieve session storage values on mount
-    const storedEmail = sessionStorage.getItem("email") || "";
-    const storedPassword = sessionStorage.getItem("password") || "";
-    const storedUserId = sessionStorage.getItem("userId") || "";
+    const storedEmail = localStorage.getItem("email") || "";
+    const storedPassword = localStorage.getItem("password") || "";
+    const storedUserId = localStorage.getItem("userId") || "";
 
     setSession({
       email: storedEmail,
@@ -59,9 +59,9 @@ export default function LoginPage() {
 
       const data = await res.json();
       if (res.ok) {
-        sessionStorage.setItem("email", formData.email_id);
-        sessionStorage.setItem("password", formData.password);
-        sessionStorage.setItem("userId", data.user._id);
+        localStorage.setItem("email", formData.email_id);
+        localStorage.setItem("password", formData.password);
+        localStorage.setItem("userId", data.user._id);
 
         setSession({
           email: formData.email_id,

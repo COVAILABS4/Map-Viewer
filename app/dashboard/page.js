@@ -25,10 +25,10 @@ import {
 const Dashboard = () => {
   const router = useRouter();
   const userEmail = useRef(
-    typeof window !== "undefined" ? sessionStorage.getItem("email") : ""
+    typeof window !== "undefined" ? localStorage.getItem("email") : ""
   );
   const userId = useRef(
-    typeof window !== "undefined" ? sessionStorage.getItem("userId") : ""
+    typeof window !== "undefined" ? localStorage.getItem("userId") : ""
   );
   const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -52,7 +52,7 @@ const Dashboard = () => {
 
   const handleLogout = () => {
     if (typeof window !== "undefined") {
-      sessionStorage.clear();
+      localStorage.clear();
     }
     router.push("/");
   };

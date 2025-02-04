@@ -42,7 +42,7 @@ const MapPage = () => {
       setL(leaflet);
     });
 
-    const userId = sessionStorage.getItem("userId");
+    const userId = localStorage.getItem("userId");
 
     if (id && userId) {
       // Fetch the location data for the specific ID
