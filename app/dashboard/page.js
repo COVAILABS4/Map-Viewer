@@ -24,8 +24,12 @@ import {
 
 const Dashboard = () => {
   const router = useRouter();
-  const userEmail = useRef(sessionStorage.getItem("email"));
-  const userId = useRef(sessionStorage.getItem("userId"));
+  const userEmail = useRef(
+    typeof window !== "undefined" ? sessionStorage.getItem("email") : ""
+  );
+  const userId = useRef(
+    typeof window !== "undefined" ? sessionStorage.getItem("userId") : ""
+  );
   const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedLocation, setSelectedLocation] = useState(null);
@@ -47,7 +51,9 @@ const Dashboard = () => {
   }, [router]);
 
   const handleLogout = () => {
-    sessionStorage.clear();
+    if (typeof window !== "undefined") {
+      sessionStorage.clear();
+    }
     router.push("/");
   };
 
@@ -183,33 +189,6 @@ const Dashboard = () => {
           </ListGroup>
         )}
       </Container>
-
-      {/* Update Location Modal */}
-      <Modal show={showUpdateModal} onHide={() => setShowUpdateModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Update Location</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>New Location Name</Form.Label>
-              <Form.Control
-                type="text"
-                value={newLocationName}
-                onChange={(e) => setNewLocationName(e.target.value)}
-              />
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowUpdateModal(false)}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={handleUpdate}>
-            Save Changes
-          </Button>
-        </Modal.Footer>
-      </Modal>
     </div>
   );
 };
