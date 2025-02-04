@@ -1,9 +1,13 @@
 import mongoose from "mongoose";
 
-// Define the schema
 const locationSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    locationName: { type: String, required: true },
     geoaxis: [
       {
         latitude: { type: Number, required: true },
@@ -12,12 +16,9 @@ const locationSchema = new mongoose.Schema(
       },
     ],
   },
-  { collection: "locationCollection" } // Specify the collection name here
+  { collection: "locations", timestamps: true }
 );
 
-// Check if the model already exists, if so, use the existing model, else create a new one
 const Location =
-  mongoose.models.locationCollection ||
-  mongoose.model("locationCollection", locationSchema);
-
+  mongoose.models.Location || mongoose.model("Location", locationSchema);
 export default Location;

@@ -1,103 +1,122 @@
 "use client";
-import { useEffect, useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Spinner,
-  Button,
   Container,
+  Form,
+  Button,
+  Spinner,
+  Card,
   Row,
   Col,
-  ListGroup,
-  Card,
-  Badge,
-} from "react-bootstrap"; // Import Bootstrap components
-import { FaMapMarkedAlt } from "react-icons/fa"; // Import FontAwesome for an icon
+} from "react-bootstrap";
+import "bootstrap/dist/css/bootstrap.min.css";
 
-const Home = () => {
-  const [locations, setLocations] = useState([]);
-  const [loading, setLoading] = useState(true); // State to track loading
+export default function LoginPage() {
+  const [formData, setFormData] = useState({ email_id: "", password: "" });
+  const [loading, setLoading] = useState(true);
+  const [loggingIn, setLoggingIn] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    // Fetch the list of locations from the API
-    fetch("/api/get-data")
-      .then((response) => response.json())
-      .then((data) => {
-        setLocations(data);
-        setLoading(false); // Stop loading once data is fetched
-      })
-      .catch((error) => {
-        console.error("Error fetching locations:", error);
-        setLoading(false); // Stop loading if there is an error
-      });
-  }, []);
+    const userId = sessionStorage.getItem("userId");
+    if (userId) {
+      router.push("/dashboard");
+    } else {
+      setLoading(false);
+    }
+  }, [router]);
 
-  const handleClick = (id) => {
-    // Redirect to the Map page with the selected location id
-    router.push(`/map/${id}`);
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  return (
-    <Container fluid className="p-4">
-      <Row className="mb-4">
-        <Col md={12} className="text-center">
-          <h1>Locations List</h1>
-          <p className="lead text-muted">
-            Click on a location to see it on the map.
-          </p>
-        </Col>
-      </Row>
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoggingIn(true);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        sessionStorage.setItem("email", formData.email_id);
+        sessionStorage.setItem("password", formData.password);
+        sessionStorage.setItem("userId", data.user._id);
+        alert("Login successful!");
+        router.push("/dashboard");
+      } else {
+        alert(data.message);
+      }
+    } catch (error) {
+      console.error("Login failed", error);
+    } finally {
+      setLoggingIn(false);
+    }
+  };
 
-      {loading ? (
-        <Row className="justify-content-center">
-          <Col xs="auto">
-            <Spinner animation="border" role="status" variant="primary">
-              <span className="visually-hidden">Loading...</span>
-            </Spinner>
-          </Col>
-        </Row>
-      ) : (
-        <Row>
-          <Col md={12}>
-            <ListGroup>
-              {locations.map((location, index) => (
-                <ListGroup.Item key={location._id} className="mb-3">
-                  <Card className="shadow-sm" style={{ cursor: "pointer" }}>
-                    <Card.Body onClick={() => handleClick(location._id)}>
-                      <Row>
-                        <Col md={1} className="d-flex align-items-center">
-                          <Badge pill bg="info">
-                            {index + 1} {/* Serial Number */}
-                          </Badge>
-                        </Col>
-                        <Col md={10}>
-                          <Card.Title>
-                            <FaMapMarkedAlt className="me-2" />
-                            {location.name}
-                          </Card.Title>
-                          <Card.Text className="text-muted">
-                            Click to view on the map
-                          </Card.Text>
-                        </Col>
-                        <Col
-                          md={1}
-                          className="d-flex justify-content-end align-items-center"
-                        >
-                          <Button variant="primary" size="sm">
-                            View
-                          </Button>
-                        </Col>
-                      </Row>
-                    </Card.Body>
-                  </Card>
-                </ListGroup.Item>
-              ))}
-            </ListGroup>
-          </Col>
-        </Row>
-      )}
+  if (loading) {
+    return (
+      <Container className="d-flex justify-content-center align-items-center vh-100">
+        <Spinner animation="border" variant="primary" />
+      </Container>
+    );
+  }
+
+  return (
+    <Container className="d-flex justify-content-center align-items-center vh-100 bg-light">
+      <Card
+        className="shadow-lg p-4"
+        style={{ width: "100%", maxWidth: "400px" }}
+      >
+        <Card.Body>
+          <h2 className="text-center mb-4 text-primary">Login</h2>
+          <Form onSubmit={handleSubmit}>
+            <Form.Group className="mb-3">
+              <Form.Label>Email Address</Form.Label>
+              <Form.Control
+                type="email"
+                name="email_id"
+                placeholder="Enter email"
+                onChange={handleChange}
+                required
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Password</Form.Label>
+              <Form.Control
+                type="password"
+                name="password"
+                placeholder="Enter password"
+                onChange={handleChange}
+                required
+              />
+            </Form.Group>
+            <Button
+              variant="success"
+              type="submit"
+              className="w-100"
+              disabled={loggingIn}
+            >
+              {loggingIn ? "Logging in..." : "Login"}
+            </Button>
+          </Form>
+          <Row className="mt-3 text-center">
+            <Col>
+              <Button
+                variant="outline-primary"
+                className="w-100"
+                onClick={() => router.push("/register")}
+              >
+                Register
+              </Button>
+            </Col>
+          </Row>
+        </Card.Body>
+      </Card>
     </Container>
   );
-};
-
-export default Home;
+}
