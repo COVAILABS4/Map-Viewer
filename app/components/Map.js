@@ -51,7 +51,7 @@ const MapPage = () => {
         .then((data) => setLocationData(data.location));
     }
   }, [id]);
-
+  //SSS
   if (!locationData) return <div>Loading...</div>;
 
   const path = locationData.geoaxis.map((point) => [
