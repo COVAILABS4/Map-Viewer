@@ -14,14 +14,29 @@ import {
 import "bootstrap/dist/css/bootstrap.min.css";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [formData, setFormData] = useState({ email_id: "", password: "" });
   const [loading, setLoading] = useState(true);
   const [loggingIn, setLoggingIn] = useState(false);
-  const router = useRouter();
+  const [session, setSession] = useState({
+    email: "",
+    password: "",
+    userId: "",
+  });
 
   useEffect(() => {
-    const userId = sessionStorage.getItem("userId");
-    if (userId) {
+    // Retrieve session storage values on mount
+    const storedEmail = sessionStorage.getItem("email") || "";
+    const storedPassword = sessionStorage.getItem("password") || "";
+    const storedUserId = sessionStorage.getItem("userId") || "";
+
+    setSession({
+      email: storedEmail,
+      password: storedPassword,
+      userId: storedUserId,
+    });
+
+    if (storedUserId) {
       router.push("/dashboard");
     } else {
       setLoading(false);
@@ -41,11 +56,19 @@ export default function LoginPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
+
       const data = await res.json();
       if (res.ok) {
         sessionStorage.setItem("email", formData.email_id);
         sessionStorage.setItem("password", formData.password);
         sessionStorage.setItem("userId", data.user._id);
+
+        setSession({
+          email: formData.email_id,
+          password: formData.password,
+          userId: data.user._id,
+        });
+
         alert("Login successful!");
         router.push("/dashboard");
       } else {
@@ -81,6 +104,7 @@ export default function LoginPage() {
                 type="email"
                 name="email_id"
                 placeholder="Enter email"
+                value={formData.email_id}
                 onChange={handleChange}
                 required
               />
@@ -91,6 +115,7 @@ export default function LoginPage() {
                 type="password"
                 name="password"
                 placeholder="Enter password"
+                value={formData.password}
                 onChange={handleChange}
                 required
               />

@@ -23,24 +23,30 @@ import {
 } from "react-icons/fa";
 
 const Dashboard = () => {
-  const userEmail = sessionStorage.getItem("email");
-
+  const router = useRouter();
+  const [userEmail, setUserEmail] = useState("");
+  const [userId, setUserId] = useState("");
   const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [newLocationName, setNewLocationName] = useState("");
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const router = useRouter();
 
+  // Load session data into state
   useEffect(() => {
-    const userId = sessionStorage.getItem("userId");
+    const storedEmail = sessionStorage.getItem("email");
+    const storedUserId = sessionStorage.getItem("userId");
 
-    if (!userId) {
+    if (!storedUserId) {
       router.push("/");
       return;
     }
-    fetch(`/api/location?userId=${userId}`)
+
+    setUserEmail(storedEmail);
+    setUserId(storedUserId);
+
+    fetch(`/api/location?userId=${storedUserId}`)
       .then((response) => response.json())
       .then((data) => {
         setLocations(data);
@@ -84,6 +90,7 @@ const Dashboard = () => {
           prev.filter((loc) => loc._id !== selectedLocation._id)
         );
         setShowDeleteModal(false);
+        setSelectedLocation(null);
       });
   };
 
@@ -124,9 +131,16 @@ const Dashboard = () => {
           <ListGroup>
             {locations.map((location, index) => (
               <ListGroup.Item
-                onClick={() => handleClick(location._id)}
                 key={location._id}
-                className="mb-3 shadow-sm rounded-3"
+                className="mb-3 shadow-sm rounded-3 list-group-item-action"
+                onClick={() => handleClick(location._id)}
+                style={{ transition: "background-color 0.2s" }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.backgroundColor = "#f8f9fa")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.backgroundColor = "white")
+                }
               >
                 <Card>
                   <Card.Body>
@@ -198,6 +212,25 @@ const Dashboard = () => {
           </Button>
           <Button variant="primary" onClick={handleUpdate}>
             Save Changes
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Delete Location</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Are you sure you want to delete{" "}
+          <strong>{selectedLocation?.locationName}</strong>?
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={handleDelete}>
+            Delete
           </Button>
         </Modal.Footer>
       </Modal>

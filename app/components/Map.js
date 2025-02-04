@@ -18,8 +18,13 @@ const MapPage = () => {
   const [error, setError] = useState(null);
 
   const { id } = useParams();
-  const userId =
-    typeof window !== "undefined" ? sessionStorage.getItem("userId") : null;
+  const [userId, setUserId] = useState(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setUserId(sessionStorage.getItem("userId"));
+    }
+  }, []);
 
   useEffect(() => {
     if (!userId) {
