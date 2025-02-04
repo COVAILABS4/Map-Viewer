@@ -1,66 +1,58 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import {
-  MapContainer,
-  TileLayer,
-  Polyline,
-  Marker,
-  Popup,
-} from "react-leaflet";
-import L from "leaflet";
+
+// Dynamically import Leaflet and react-leaflet components to disable SSR
+import dynamic from "next/dynamic";
+
+// Dynamically import Leaflet MapContainer and related components
+const MapContainer = dynamic(
+  () => import("react-leaflet").then((mod) => mod.MapContainer),
+  { ssr: false }
+);
+const TileLayer = dynamic(
+  () => import("react-leaflet").then((mod) => mod.TileLayer),
+  { ssr: false }
+);
+const Polyline = dynamic(
+  () => import("react-leaflet").then((mod) => mod.Polyline),
+  { ssr: false }
+);
+const Marker = dynamic(
+  () => import("react-leaflet").then((mod) => mod.Marker),
+  { ssr: false }
+);
+const Popup = dynamic(() => import("react-leaflet").then((mod) => mod.Popup), {
+  ssr: false,
+});
+
+// import L from "leaflet";
+// const L = dynamic(() => import("leaflet"), { ssr: false });
 import "leaflet/dist/leaflet.css";
 
 const MapPage = () => {
-  const [locations, setLocations] = useState([]);
   const [locationData, setLocationData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
-  const { id } = useParams();
-  const [userId, setUserId] = useState(null);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setUserId(sessionStorage.getItem("userId"));
-    }
-  }, []);
+  const [L, setL] = useState(null);
+  //   const router = useRouter();
+  const { id } = useParams(); // Get the location ID from the URL query
 
   useEffect(() => {
-    if (!userId) {
-      setError("User not authenticated");
-      setLoading(false);
-      return;
+    import("leaflet").then((leaflet) => {
+      setL(leaflet);
+    });
+
+    const userId = sessionStorage.getItem("userId");
+
+    if (id && userId) {
+      // Fetch the location data for the specific ID
+      fetch(`/api/location/${id}?userId=${userId}`)
+        .then((response) => response.json())
+        .then((data) => setLocationData(data.location));
     }
+  }, [id]);
 
-    fetch(`/api/location?userId=${userId}`)
-      .then((response) => response.json())
-      .then((data) => {
-        setLocations(data);
-        const selectedLocation = data.find((loc) => loc._id === id);
-        if (selectedLocation) {
-          setLocationData(selectedLocation);
-        } else {
-          setError("Location not found");
-        }
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching locations:", err);
-        setError("Failed to fetch locations");
-        setLoading(false);
-      });
-  }, [id, userId]);
-
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div style={{ color: "red" }}>{error}</div>;
-  if (
-    !locationData ||
-    !locationData.geoaxis ||
-    locationData.geoaxis.length === 0
-  ) {
-    return <div>No location data available</div>;
-  }
+  if (!locationData) return <div>Loading...</div>;
 
   const path = locationData.geoaxis.map((point) => [
     point.latitude,
@@ -72,7 +64,7 @@ const MapPage = () => {
 
   return (
     <div>
-      <h1>{locationData.locationName}</h1>
+      <h1>{locationData.name}</h1>
       <MapContainer
         center={[startPosition.latitude, startPosition.longitude]}
         zoom={15}
