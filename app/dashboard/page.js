@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   Spinner,
@@ -24,8 +24,8 @@ import {
 
 const Dashboard = () => {
   const router = useRouter();
-  const [userEmail, setUserEmail] = useState("");
-  const [userId, setUserId] = useState("");
+  const userEmail = useRef(sessionStorage.getItem("email"));
+  const userId = useRef(sessionStorage.getItem("userId"));
   const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedLocation, setSelectedLocation] = useState(null);
@@ -33,29 +33,17 @@ const Dashboard = () => {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  // Load session data into state
   useEffect(() => {
-    const storedEmail = sessionStorage.getItem("email");
-    const storedUserId = sessionStorage.getItem("userId");
-
-    if (!storedUserId) {
+    if (!userId.current) {
       router.push("/");
       return;
     }
 
-    setUserEmail(storedEmail);
-    setUserId(storedUserId);
-
-    fetch(`/api/location?userId=${storedUserId}`)
+    fetch(`/api/location?userId=${userId.current}`)
       .then((response) => response.json())
-      .then((data) => {
-        setLocations(data);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching locations:", error);
-        setLoading(false);
-      });
+      .then((data) => setLocations(data))
+      .catch((error) => console.error("Error fetching locations:", error))
+      .finally(() => setLoading(false));
   }, [router]);
 
   const handleLogout = () => {
@@ -63,58 +51,60 @@ const Dashboard = () => {
     router.push("/");
   };
 
-  const handleUpdate = () => {
-    fetch(`/api/location/${selectedLocation._id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ locationName: newLocationName }),
-    })
-      .then((res) => res.json())
-      .then(() => {
-        setLocations((prev) =>
-          prev.map((loc) =>
-            loc._id === selectedLocation._id
-              ? { ...loc, locationName: newLocationName }
-              : loc
-          )
-        );
-        setShowUpdateModal(false);
+  const handleUpdate = async () => {
+    try {
+      const res = await fetch(`/api/location/${selectedLocation._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ locationName: newLocationName }),
       });
+      if (!res.ok) throw new Error("Failed to update location");
+
+      setLocations((prev) =>
+        prev.map((loc) =>
+          loc._id === selectedLocation._id
+            ? { ...loc, locationName: newLocationName }
+            : loc
+        )
+      );
+      setShowUpdateModal(false);
+    } catch (error) {
+      console.error("Error updating location:", error);
+    }
   };
 
-  const handleDelete = () => {
-    fetch(`/api/location/${selectedLocation._id}`, { method: "DELETE" })
-      .then((res) => res.json())
-      .then(() => {
-        setLocations((prev) =>
-          prev.filter((loc) => loc._id !== selectedLocation._id)
-        );
-        setShowDeleteModal(false);
-        setSelectedLocation(null);
+  const handleDelete = async () => {
+    try {
+      const res = await fetch(`/api/location/${selectedLocation._id}`, {
+        method: "DELETE",
       });
-  };
+      if (!res.ok) throw new Error("Failed to delete location");
 
-  const handleClick = (id) => {
-    router.push(`/map/${id}`);
+      setLocations((prev) =>
+        prev.filter((loc) => loc._id !== selectedLocation._id)
+      );
+      setShowDeleteModal(false);
+      setSelectedLocation(null);
+    } catch (error) {
+      console.error("Error deleting location:", error);
+    }
   };
 
   return (
     <div className="d-flex vh-100">
-      {/* Sidebar */}
       <div
         className="bg-dark text-white p-4 d-flex flex-column align-items-center justify-content-between"
         style={{ width: "250px" }}
       >
         <div className="text-center">
           <FaUserCircle size={80} className="mb-3" />
-          <p className="mb-2">{userEmail}</p>
+          <p className="mb-2">{userEmail.current}</p>
         </div>
         <Button variant="danger" onClick={handleLogout} className="w-100">
           <FaSignOutAlt /> Logout
         </Button>
       </div>
 
-      {/* Main Content */}
       <Container className="p-4 flex-grow-1">
         <Row className="mb-4">
           <Col>
@@ -133,8 +123,11 @@ const Dashboard = () => {
               <ListGroup.Item
                 key={location._id}
                 className="mb-3 shadow-sm rounded-3 list-group-item-action"
-                onClick={() => handleClick(location._id)}
-                style={{ transition: "background-color 0.2s" }}
+                onClick={() => router.push(`/map/${location._id}`)}
+                style={{
+                  cursor: "pointer",
+                  transition: "background-color 0.2s",
+                }}
                 onMouseEnter={(e) =>
                   (e.currentTarget.style.backgroundColor = "#f8f9fa")
                 }
@@ -146,7 +139,9 @@ const Dashboard = () => {
                   <Card.Body>
                     <Row>
                       <Col md={1}>
-                        <Badge bg="info">{index + 1}</Badge>
+                        <Badge bg="light" text="dark">
+                          {index + 1}
+                        </Badge>
                       </Col>
                       <Col md={7}>
                         <Card.Title>
@@ -212,25 +207,6 @@ const Dashboard = () => {
           </Button>
           <Button variant="primary" onClick={handleUpdate}>
             Save Changes
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
-      {/* Delete Confirmation Modal */}
-      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Delete Location</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          Are you sure you want to delete{" "}
-          <strong>{selectedLocation?.locationName}</strong>?
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-            Cancel
-          </Button>
-          <Button variant="danger" onClick={handleDelete}>
-            Delete
           </Button>
         </Modal.Footer>
       </Modal>
