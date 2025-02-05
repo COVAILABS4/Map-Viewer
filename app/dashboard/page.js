@@ -24,12 +24,8 @@ import {
 
 const Dashboard = () => {
   const router = useRouter();
-  const userEmail = useRef(
-    typeof window !== "undefined" ? localStorage.getItem("email") : ""
-  );
-  const userId = useRef(
-    typeof window !== "undefined" ? localStorage.getItem("userId") : ""
-  );
+  const [userEmail, setUserEmail] = useState("");
+  const [userId, setUserId] = useState("");
   const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedLocation, setSelectedLocation] = useState(null);
@@ -38,17 +34,20 @@ const Dashboard = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
-    if (!userId.current) {
-      router.push("/");
-      return;
+    if (typeof window !== "undefined") {
+      setUserEmail(localStorage.getItem("email") || "");
+      setUserId(localStorage.getItem("userId") || "");
     }
+  }, []);
 
-    fetch(`/api/location?userId=${userId.current}`)
+  useEffect(() => {
+    if (!userId) return;
+    fetch(`/api/location?userId=${userId}`)
       .then((response) => response.json())
       .then((data) => setLocations(data))
       .catch((error) => console.error("Error fetching locations:", error))
       .finally(() => setLoading(false));
-  }, [router]);
+  }, [userId]);
 
   const handleLogout = () => {
     if (typeof window !== "undefined") {
@@ -104,7 +103,7 @@ const Dashboard = () => {
       >
         <div className="text-center">
           <FaUserCircle size={80} className="mb-3" />
-          <p className="mb-2">{userEmail.current}</p>
+          <p className="mb-2">{userEmail}</p>
         </div>
         <Button variant="danger" onClick={handleLogout} className="w-100">
           <FaSignOutAlt /> Logout
@@ -123,62 +122,44 @@ const Dashboard = () => {
           <div className="text-center">
             <Spinner animation="border" role="status" variant="primary" />
           </div>
+        ) : locations.length === 0 ? (
+          <p className="text-center text-muted">No locations available.</p>
         ) : (
           <ListGroup>
-            {locations.map((location, index) => (
+            {locations.map((location) => (
               <ListGroup.Item
                 key={location._id}
                 className="mb-3 shadow-sm rounded-3 list-group-item-action"
-                onClick={() => router.push(`/map/${location._id}`)}
-                style={{
-                  cursor: "pointer",
-                  transition: "background-color 0.2s",
-                }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#f8f9fa")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.backgroundColor = "white")
-                }
               >
                 <Card>
                   <Card.Body>
                     <Row>
-                      <Col md={1}>
-                        <Badge bg="light" text="dark">
-                          {index + 1}
-                        </Badge>
-                      </Col>
-                      <Col md={7}>
+                      <Col md={8}>
                         <Card.Title>
-                          <FaMapMarkedAlt className="me-2" />
+                          <FaMapMarkedAlt className="me-2" />{" "}
                           {location.locationName}
                         </Card.Title>
                       </Col>
                       <Col md={4} className="text-end">
                         <Button
-                          variant="success"
-                          size="sm"
+                          variant="warning"
                           className="me-2"
-                          onClick={(e) => {
-                            e.stopPropagation();
+                          onClick={() => {
                             setSelectedLocation(location);
                             setNewLocationName(location.locationName);
                             setShowUpdateModal(true);
                           }}
                         >
-                          <FaEdit /> Update
+                          <FaEdit />
                         </Button>
                         <Button
                           variant="danger"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
+                          onClick={() => {
                             setSelectedLocation(location);
                             setShowDeleteModal(true);
                           }}
                         >
-                          <FaTrash /> Delete
+                          <FaTrash />
                         </Button>
                       </Col>
                     </Row>
@@ -189,6 +170,49 @@ const Dashboard = () => {
           </ListGroup>
         )}
       </Container>
+
+      {/* Update Modal */}
+      <Modal show={showUpdateModal} onHide={() => setShowUpdateModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Update Location</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group>
+              <Form.Label>New Location Name</Form.Label>
+              <Form.Control
+                type="text"
+                value={newLocationName}
+                onChange={(e) => setNewLocationName(e.target.value)}
+              />
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowUpdateModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleUpdate}>
+            Update
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Delete Modal */}
+      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Deletion</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>Are you sure you want to delete this location?</Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={handleDelete}>
+            Delete
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };
