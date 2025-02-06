@@ -126,9 +126,12 @@ const Dashboard = () => {
           <p className="text-center text-muted">No locations available.</p>
         ) : (
           <ListGroup>
-            {locations.map((location) => (
+            {locations.map((location, index) => (
               <ListGroup.Item
                 key={location._id}
+                onClick={() => {
+                  router.push(`map/${location._id}`);
+                }}
                 className="mb-3 shadow-sm rounded-3 list-group-item-action"
               >
                 <Card>
