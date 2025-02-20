@@ -141,7 +141,12 @@ const Dashboard = () => {
                         <Card.Title>
                           <FaMapMarkedAlt className="me-2" />{" "}
                           {location.locationName}
+                          {/* {console.log(location)} */}
                         </Card.Title>
+                        <Card.Body>
+                          Start :{" "}
+                          {location.geoaxis && location.geoaxis[0].timestamp}
+                        </Card.Body>
                       </Col>
                       <Col md={4} className="text-end">
                         <Button
